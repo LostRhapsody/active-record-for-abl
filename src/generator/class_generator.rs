@@ -11,7 +11,7 @@ pub struct ClassGenerator {
 
 impl ClassGenerator {
     pub fn new(config: Config) -> Self {
-        let mut tera = Tera::new("templates/**/*").unwrap();
+        let mut tera = Tera::default();
         tera.autoescape_on(vec![]); // Disable auto-escaping for ABL code
 
         // Add embedded templates
