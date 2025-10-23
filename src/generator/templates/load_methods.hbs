@@ -1,0 +1,38 @@
+{% for index in indexes %}
+  /* Read by index {{ index.name }} - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Load({% for field in index.fields %}INPUT p{{ field.name }} AS {{ field.abl_type }}{% if not loop.last %}, {% endif %}{% endfor %}):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    LogAction('Loading record by index {{ index.name }}').
+    FIND FIRST buf{{ table_name }} WHERE {% for field in index.fields %}buf{{ table_name }}.{{ field.name }} = p{{ field.name }}{% if not loop.last %} AND {% endif %}{% endfor %} NO-LOCK NO-ERROR.
+    IF AVAILABLE buf{{ table_name }} THEN DO:
+      LoadFields(BUFFER buf{{ table_name }}).
+      THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+      LoadRelatedRecords(BUFFER buf{{ table_name }}).
+      RETURN TRUE.
+    END.
+    RETURN FALSE.
+  END METHOD.
+
+{% endfor %}
+  /* Batch Load - Auto-generated, do not modify */
+  METHOD PUBLIC {{ namespace }}.{{ table_name }} EXTENT LoadBatch(INPUT pcWhere AS CHARACTER):
+    DEFINE VARIABLE oRecords AS {{ namespace }}.{{ table_name }} EXTENT NO-UNDO.
+    DEFINE VARIABLE iCount AS INTEGER NO-UNDO INITIAL 0.
+    DEFINE VARIABLE queryString AS CHAR NO-UNDO.
+    DEFINE VARIABLE qh{{ table_name }} AS HANDLE NO-UNDO.
+    DEFINE QUERY q{{ table_name }} FOR {{ table_name }}.
+    queryString = 'FOR EACH {{ table_name }} WHERE ' + pcWhere + ' NO-LOCK'.
+    QUERY q{{ table_name }}:QUERY-PREPARE(queryString).
+    QUERY q{{ table_name }}:QUERY-OPEN().
+    qh{{ table_name }} = QUERY q{{ table_name }}:HANDLE.
+    LogAction('Loading batch with WHERE: ' + pcWhere).
+    DO WHILE qh{{ table_name }}:GET-NEXT():
+      iCount = iCount + 1.
+      EXTENT(oRecords) = iCount.
+      oRecords[iCount] = NEW {{ namespace }}.{{ table_name }}().
+      oRecords[iCount]:LoadFields(BUFFER {{ table_name }}).
+      oRecords[iCount]:ROWID_ = ROWID({{ table_name }}).
+      oRecords[iCount]:LoadRelatedRecords(BUFFER {{ table_name }}).
+    END.
+    RETURN oRecords.
+  END METHOD.

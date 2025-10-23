@@ -1,0 +1,28 @@
+[general]
+output_dir = "ara"
+schema_file = "schema.json"
+overwrite_existing = true
+include_timestamps = true
+
+[type_mapping]
+CHARACTER = { abl_type = "CHARACTER", prefix = "c_" }
+INTEGER = { abl_type = "INTEGER", prefix = "i_" }
+DECIMAL = { abl_type = "DECIMAL", prefix = "dec_" }
+DATE = { abl_type = "DATE", prefix = "d_" }
+DATETIME = { abl_type = "DATETIME", prefix = "dt_" }
+LOGICAL = { abl_type = "LOGICAL", prefix = "l_" }
+RAW = { abl_type = "RAW", prefix = "raw_" }
+LONGCHAR = { abl_type = "LONGCHAR", prefix = "cl_" }
+
+[generation]
+include_json_methods = true
+include_xml_methods = true
+include_batch_methods = true
+include_logging = true
+include_temp_table_methods = true
+include_related_records_hook = true
+
+[output]
+file_extension = ".cls"
+class_prefix = ""
+namespace = "ara"

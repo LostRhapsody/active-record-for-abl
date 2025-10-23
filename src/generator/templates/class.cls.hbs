@@ -1,0 +1,30 @@
+/* WARNING: This is an auto-generated file. Do NOT add custom logic here as it will be overwritten on schema update.
+ * Extend this class in a separate file to add custom methods (e.g., for loading related records).
+ * Generated on: {{ timestamp }} with ara-cli v1.0 */
+CLASS {{ namespace }}.{{ table_name }}:
+
+{% for field in fields %}
+  DEFINE PUBLIC PROPERTY {{ field.name }} AS {{ field.abl_type }}{% if field.extent > 0 %} EXTENT {{ field.extent }}{% endif %} GET. SET.
+{% endfor %}
+
+  DEFINE PUBLIC PROPERTY ROWID_ AS ROWID GET. SET.
+  DEFINE PRIVATE TEMP-TABLE tt{{ table_name }} LIKE {{ table_name }}.
+  DEFINE PROTECTED PROPERTY DebugEnabled AS LOGICAL INITIAL FALSE GET. SET.
+  DEFINE PROTECTED PROPERTY LogFile AS CHARACTER INITIAL '' GET. SET.
+
+{% include "methods.hbs" %}
+
+{% include "load_methods.hbs" %}
+
+{% include "utilities.hbs" %}
+
+  /* Constructor - Auto-generated, do not modify */
+  CONSTRUCTOR PUBLIC {{ table_name }}():
+    THIS-OBJECT:ROWID_ = ?.
+  END CONSTRUCTOR.
+  
+  /* Destructor - Auto-generated, do not modify */
+  DESTRUCTOR PUBLIC {{ table_name }}():
+  END DESTRUCTOR.
+
+END CLASS.

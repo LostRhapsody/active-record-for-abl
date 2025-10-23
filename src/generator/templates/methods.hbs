@@ -1,0 +1,86 @@
+  /* Log action for debugging or file logging */
+  METHOD PROTECTED VOID LogAction(INPUT pcAction AS CHARACTER):
+    IF THIS-OBJECT:DebugEnabled THEN
+      MESSAGE pcAction VIEW-AS ALERT-BOX.
+    IF THIS-OBJECT:LogFile <> '' THEN DO:
+      OUTPUT TO VALUE(THIS-OBJECT:LogFile) APPEND.
+      PUT UNFORMATTED pcAction SKIP(1).
+      OUTPUT CLOSE.
+    END.
+  END METHOD.
+
+  /* Create or Update - Auto-generated, do not modify */
+  METHOD PUBLIC VOID Save():
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    DO TRANSACTION ON ERROR UNDO, THROW:
+      IF THIS-OBJECT:ROWID_ <> ? THEN DO:
+       FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
+        LogAction('Saving existing record ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+      END.
+      IF NOT AVAILABLE buf{{ table_name }} THEN DO:
+        CREATE buf{{ table_name }}.
+        LogAction('Creating new record').
+      END.
+      ASSIGN
+{% for field in fields %}
+        buf{{ table_name }}.{{ field.name }} = THIS-OBJECT:{{ field.name }}{% if not loop.last %},{% endif %}
+{% endfor %}
+        THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }})
+      .
+    END.
+    CATCH eError AS Progress.Lang.Error:
+      LogAction('Error in Save: ' + eError:GetMessage(1)).
+      MESSAGE 'Error in Save method for {{ table_name }}: ' + eError:GetMessage(1).
+      UNDO, THROW eError.
+    END CATCH.
+  END METHOD.
+
+  /* Read by ROWID - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Load(INPUT prRowId AS ROWID):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    LogAction('Loading record by ROWID ' + STRING(prRowId)).
+    FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = prRowId NO-LOCK NO-ERROR.
+    IF AVAILABLE buf{{ table_name }} THEN DO:
+      LoadFields(BUFFER buf{{ table_name }}).
+      THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+      LoadRelatedRecords(BUFFER buf{{ table_name }}).
+      RETURN TRUE.
+    END.
+    RETURN FALSE.
+  END METHOD.
+
+  /* Delete - Auto-generated, do not modify */
+  METHOD PUBLIC VOID Delete():
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    DO TRANSACTION ON ERROR UNDO, THROW:
+      IF THIS-OBJECT:ROWID_ <> ? THEN DO:
+        FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
+        LogAction('Deleting record ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+        IF AVAILABLE buf{{ table_name }} THEN DO:
+          DELETE buf{{ table_name }}.
+          THIS-OBJECT:ROWID_ = ?.
+        END.
+      END.
+    END.
+    CATCH eError AS Progress.Lang.Error:
+      LogAction('Error in Delete: ' + eError:GetMessage(1)).
+      MESSAGE 'Error in Delete method for {{ table_name }}: ' + eError:GetMessage(1).
+      UNDO, THROW eError.
+    END CATCH.
+  END METHOD.
+
+  /* Load Fields Into Object - Auto-generated, do not modify */
+  METHOD PRIVATE VOID LoadFields(BUFFER buf{{ table_name }} FOR {{ table_name }}):
+    ASSIGN
+{% for field in fields %}
+      THIS-OBJECT:{{ field.name }} = buf{{ table_name }}.{{ field.name }}{% if not loop.last %},{% endif %}
+{% endfor %}
+    .
+  END METHOD.
+
+  /* Hook for loading related records - Override in child class */
+  METHOD PROTECTED VOID LoadRelatedRecords(BUFFER buf{{ table_name }} FOR {{ table_name }}):
+    /* Override this method in a child class to load related records.
+     * Example: For an Order, load OrderLines into an array or implement an iterator like GetNextOrderLine().
+     * Use buf{{ table_name }} to access the current record's fields (e.g., OrderNum). */
+  END METHOD.

@@ -1,0 +1,17 @@
+# Sample Progress Connection File
+# Replace these values with your actual database connection details
+
+# Database connection parameters
+-db sports2020
+-H localhost
+-S 5162
+-N tcp
+-L 1000
+-B 1000
+-nb 1000
+-ldb sports2020
+-ldbname sports2020
+
+# Additional connection options
+-verbose
+-nowarn
