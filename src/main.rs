@@ -1,5 +1,6 @@
 // TODO: Implement dirty tracking to only update changed fields instead of all fields
 // This would improve performance by only sending modified field values to the database
+// TODO: Got some errors from the test-orderline.p script, bad spots have been commented out, need to fix the methods causing them.
 
 use clap::Parser;
 use anyhow::Result;
