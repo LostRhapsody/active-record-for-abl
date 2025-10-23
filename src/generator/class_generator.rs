@@ -23,10 +23,11 @@ impl ClassGenerator {
         Self { config, tera }
     }
 
-    pub fn generate_class(&self, table: &Table) -> Result<String> {
+    pub fn generate_class(&self, table: &Table, class_name: &str) -> Result<String> {
         let mut context = Context::new();
 
-        // Basic table info
+        // Basic table info\
+        context.insert("class_name", &class_name);
         context.insert("table_name", &table.name);
         context.insert("namespace", &self.config.output.namespace);
         context.insert(

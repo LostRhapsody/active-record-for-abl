@@ -4,7 +4,7 @@
     CREATE bufTT.
     ASSIGN
 {% for field in fields %}
-      bufTT.{{ field.name }} = THIS-OBJECT:{{ field.name }}{% if not loop.last %},{% endif %}
+      bufTT.{{ field.name }} = THIS-OBJECT:{{ field.name }}
 {% endfor %}
     .
     RETURN TEMP-TABLE tt{{ table_name }}:HANDLE.

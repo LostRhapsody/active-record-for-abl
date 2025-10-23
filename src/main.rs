@@ -27,7 +27,7 @@ struct Cli {
     schema: String,
     
     /// Output directory for generated files
-    #[arg(short, long, default_value = "ara-output")]
+    #[arg(short, long, default_value = "ara")]
     output: String,
     
     /// Overwrite existing files

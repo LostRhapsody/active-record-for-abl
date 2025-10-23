@@ -1,7 +1,7 @@
 /* WARNING: This is an auto-generated file. Do NOT add custom logic here as it will be overwritten on schema update.
  * Extend this class in a separate file to add custom methods (e.g., for loading related records).
  * Generated on: {{ timestamp }} with ara-cli v1.0 */
-CLASS {{ namespace }}.{{ table_name }}:
+CLASS {{ namespace }}.{{ class_name }}:
 
 {% for field in fields %}
   DEFINE PUBLIC PROPERTY {{ field.name }} AS {{ field.abl_type }}{% if field.extent > 0 %} EXTENT {{ field.extent }}{% endif %} GET. SET.
@@ -19,12 +19,12 @@ CLASS {{ namespace }}.{{ table_name }}:
 {% include "utilities.hbs" %}
 
   /* Constructor - Auto-generated, do not modify */
-  CONSTRUCTOR PUBLIC {{ table_name }}():
+  CONSTRUCTOR PUBLIC {{ class_name }}():
     THIS-OBJECT:ROWID_ = ?.
   END CONSTRUCTOR.
   
   /* Destructor - Auto-generated, do not modify */
-  DESTRUCTOR PUBLIC {{ table_name }}():
+  DESTRUCTOR PUBLIC {{ class_name }}():
   END DESTRUCTOR.
 
 END CLASS.

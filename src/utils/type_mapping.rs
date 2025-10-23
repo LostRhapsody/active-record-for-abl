@@ -6,7 +6,8 @@ impl TypeMapping {
     /// Maps Progress data types to ABL types with prefixes
     /// Ported from progress-orm-generate.p lines 22-38
     pub fn map_data_type(progress_type: &str) -> (String, String) {
-        match progress_type {
+        let progress_type = progress_type.to_uppercase();
+        match progress_type.as_str() {
             "BLOB" => ("RAW".to_string(), "b_".to_string()),
             "CHARACTER" => ("CHARACTER".to_string(), "c_".to_string()),
             "CLOB" => ("LONGCHAR".to_string(), "cl_".to_string()),

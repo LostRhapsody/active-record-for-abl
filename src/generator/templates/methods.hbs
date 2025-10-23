@@ -23,7 +23,7 @@
       END.
       ASSIGN
 {% for field in fields %}
-        buf{{ table_name }}.{{ field.name }} = THIS-OBJECT:{{ field.name }}{% if not loop.last %},{% endif %}
+        buf{{ table_name }}.{{ field.name }} = THIS-OBJECT:{{ field.name }}
 {% endfor %}
         THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }})
       .
@@ -73,7 +73,7 @@
   METHOD PRIVATE VOID LoadFields(BUFFER buf{{ table_name }} FOR {{ table_name }}):
     ASSIGN
 {% for field in fields %}
-      THIS-OBJECT:{{ field.name }} = buf{{ table_name }}.{{ field.name }}{% if not loop.last %},{% endif %}
+      THIS-OBJECT:{{ field.name }} = buf{{ table_name }}.{{ field.name }}
 {% endfor %}
     .
   END METHOD.

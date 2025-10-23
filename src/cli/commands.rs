@@ -45,12 +45,25 @@ pub async fn handle_generate(
                 continue;
             }
 
-            let content = generator.generate_class(table)?;
+            // Convert table_name to PascalCase for class naming (remove - and _ and uppercase each word)
+            let class_name = table_name
+            .replace(['-', '_'], " ")
+            .split_whitespace()
+            .map(|word| {
+                let mut chars = word.chars();
+                match chars.next() {
+                    Some(f) => f.to_uppercase().collect::<String>() + chars.as_str(),
+                    None => String::new(),
+                }
+            })
+            .collect::<String>();
+
+            let content = generator.generate_class(table, &class_name)?;
 
             // Ensure output directory exists
             std::fs::create_dir_all(&output_dir)?;
 
-            let output_path = format!("{}/{}.cls", output_dir, table_name);
+            let output_path = format!("{}/{}.cls", output_dir, class_name);
 
             // Check if file exists and overwrite flag
             if std::path::Path::new(&output_path).exists() && !overwrite {

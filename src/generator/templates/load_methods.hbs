@@ -15,8 +15,8 @@
 
 {% endfor %}
   /* Batch Load - Auto-generated, do not modify */
-  METHOD PUBLIC {{ namespace }}.{{ table_name }} EXTENT LoadBatch(INPUT pcWhere AS CHARACTER):
-    DEFINE VARIABLE oRecords AS {{ namespace }}.{{ table_name }} EXTENT NO-UNDO.
+  METHOD PUBLIC {{ namespace }}.{{ class_name }} EXTENT LoadBatch(INPUT pcWhere AS CHARACTER):
+    DEFINE VARIABLE oRecords AS {{ namespace }}.{{ class_name }} EXTENT NO-UNDO.
     DEFINE VARIABLE iCount AS INTEGER NO-UNDO INITIAL 0.
     DEFINE VARIABLE queryString AS CHAR NO-UNDO.
     DEFINE VARIABLE qh{{ table_name }} AS HANDLE NO-UNDO.
@@ -29,7 +29,7 @@
     DO WHILE qh{{ table_name }}:GET-NEXT():
       iCount = iCount + 1.
       EXTENT(oRecords) = iCount.
-      oRecords[iCount] = NEW {{ namespace }}.{{ table_name }}().
+      oRecords[iCount] = NEW {{ namespace }}.{{ class_name }}().
       oRecords[iCount]:LoadFields(BUFFER {{ table_name }}).
       oRecords[iCount]:ROWID_ = ROWID({{ table_name }}).
       oRecords[iCount]:LoadRelatedRecords(BUFFER {{ table_name }}).
