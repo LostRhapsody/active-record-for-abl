@@ -140,20 +140,28 @@ Each generated class includes:
 - One property per database field with correct ABL types
 - `ROWID_` property for record identification
 - Private temp-table matching table structure
-- Protected logging properties (`DebugEnabled`, `LogFile`)
+- Private OpenEdge Logger for application logging
 
-### CRUD Methods
-- `Save()`: Create or update with transaction safety
-- `Load(ROWID)`: Load by ROWID
-- `Load(index_params)`: Type-safe Load methods for each index
-- `Delete()`: Delete with transaction safety
+### Active Record Methods
+- `Find(index_params...)`: Find by index parameters (one method per index)
+- `FindBy(field_name, value)`: Find first matching a single field condition (overloaded by data type)
+- `FindBy(field_name, element, value)`: Find by specific extent field element (overloaded by data type)
+- `First()`: Get first record from table
+- `Last()`: Get last record from table
+- `Create(field_values...)`: Create and save in one step
+- `Save()`: Save current instance (create if new, update if exists)
+- `Update(field_name, value)`: Update specific field and save (overloaded by data type)
+- `Update(field_name, element, value)`: Update specific extent field element and save (overloaded by data type)
+- `Destroy()`: Delete current record
+
+### Batch Operations
+- `All()`: Return all records as EXTENT
+- `Where(condition)`: Return filtered records as EXTENT
 
 ### Utility Methods
-- `LoadBatch(WHERE)`: Dynamic query with extent return
 - `ToJson()`: JSON serialization with extent field support
 - `ToXml()`: XML serialization via temp-table
 - `ToTempTable()`: Temp-table serialization
-- `LoadRelatedRecords()`: Protected hook for child classes
 
 ### Example Generated Class
 
@@ -165,15 +173,23 @@ CLASS ara.Customer:
   DEFINE PUBLIC PROPERTY Country AS CHARACTER GET. SET.
   DEFINE PUBLIC PROPERTY ROWID_ AS ROWID GET. SET.
 
-  /* CRUD Methods */
-  METHOD PUBLIC VOID Save(): ...
-  METHOD PUBLIC LOGICAL Load(INPUT prRowId AS ROWID): ...
-  METHOD PUBLIC LOGICAL Load(INPUT pCustNum AS INTEGER): ...
-  METHOD PUBLIC LOGICAL Load(INPUT pName AS CHARACTER): ...
-  METHOD PUBLIC VOID Delete(): ...
+  /* Active Record Methods */
+  METHOD PUBLIC LOGICAL Find(INPUT pCustNum AS INTEGER): ...
+  METHOD PUBLIC LOGICAL FindBy(INPUT pcFieldName AS CHARACTER, INPUT pValue AS INTEGER): ...
+  METHOD PUBLIC LOGICAL FindBy(INPUT pcFieldName AS CHARACTER, INPUT pValue AS CHARACTER): ...
+  METHOD PUBLIC LOGICAL First(): ...
+  METHOD PUBLIC LOGICAL Last(): ...
+  METHOD PUBLIC LOGICAL Create(INPUT pCustNum AS INTEGER, INPUT pcName AS CHARACTER, INPUT pcCountry AS CHARACTER): ...
+  METHOD PUBLIC LOGICAL Save(): ...
+  METHOD PUBLIC LOGICAL Update(INPUT pcFieldName AS CHARACTER, INPUT pValue AS INTEGER): ...
+  METHOD PUBLIC LOGICAL Update(INPUT pcFieldName AS CHARACTER, INPUT pValue AS CHARACTER): ...
+  METHOD PUBLIC LOGICAL Destroy(): ...
+
+  /* Batch Operations */
+  METHOD PUBLIC ara.Customer EXTENT All(): ...
+  METHOD PUBLIC ara.Customer EXTENT Where(INPUT pcCondition AS CHARACTER): ...
 
   /* Utility Methods */
-  METHOD PUBLIC ara.Customer EXTENT LoadBatch(INPUT pcWhere AS CHARACTER): ...
   METHOD PUBLIC Progress.Json.ObjectModel.JsonObject ToJson(): ...
   METHOD PUBLIC LONGCHAR ToXml(): ...
   METHOD PUBLIC HANDLE ToTempTable(): ...
@@ -181,15 +197,75 @@ CLASS ara.Customer:
 END CLASS.
 ```
 
+## Active Record Usage Examples
+
+### Single Record Operations
+```abl
+/* Find a record */
+customer = NEW ara.Customer().
+found = customer:Find(123).  /* Find by primary key */
+found = customer:FindBy('Name', 'Acme Corp').  /* Find by CHARACTER field */
+found = customer:FindBy('CustNum', 123).  /* Find by INTEGER field */
+
+/* Find by extent fields */
+found = order:FindBy('ItemCodes', 1, 'ITEM001').  /* Find by ItemCodes[1] */
+found = order:FindBy('Quantities', 1, 5).  /* Find by Quantities[1] */
+
+/* Create a new record */
+customer = NEW ara.Customer().
+customer:CustNum = 999.
+customer:Name = 'New Company'.
+customer:Country = 'USA'.
+customer:Save().  /* Creates new record */
+
+/* Update a record */
+customer:Update('Country', 'Canada').  /* Updates CHARACTER field and saves */
+customer:Update('CustNum', 123).  /* Updates INTEGER field and saves */
+customer:Name = 'Updated Company'.
+customer:Save().  /* Updates existing */
+
+/* Update extent fields */
+order:Update('ItemCodes', 1, 'ITEM001').  /* Updates ItemCodes[1] and saves */
+order:Update('Quantities', 1, 5).  /* Updates Quantities[1] and saves */
+
+/* Delete a record */
+customer:Destroy().
+```
+
+### Batch Operations
+```abl
+/* Get all records */
+customers = customer:All().  /* EXTENT of all customers */
+
+/* Get filtered records */
+customers = customer:Where('Country = "USA"').  /* EXTENT filtered */
+
+/* Get first/last records */
+first = customer:First().
+last = customer:Last().
+```
+
+### OpenEdge Logging
+The generated classes use Progress OpenEdge's built-in logging framework. Configure logging via `logging.config` file:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<logging>
+  <logger name="ara.Customer" level="INFO">
+    <appender-ref ref="ConsoleAppender"/>
+  </logger>
+</logging>
+```
+
 ## Type Safety
 
-Generated Load methods use **native ABL types** directly:
+Generated Find methods use **native ABL types** directly:
 
 ```abl
 /* Type-safe method signatures */
-METHOD PUBLIC LOGICAL Load(INPUT pCustNum AS INTEGER):
-METHOD PUBLIC LOGICAL Load(INPUT pName AS CHARACTER):
-METHOD PUBLIC LOGICAL Load(INPUT pOrderNum AS INTEGER, INPUT pLineNum AS INTEGER):
+METHOD PUBLIC LOGICAL Find(INPUT pCustNum AS INTEGER):
+METHOD PUBLIC LOGICAL Find(INPUT pName AS CHARACTER):
+METHOD PUBLIC LOGICAL Find(INPUT pOrderNum AS INTEGER, INPUT pLineNum AS INTEGER):
 ```
 
 No wrapper classes needed - the methods are type-safe at compile time.

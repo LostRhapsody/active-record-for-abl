@@ -1,38 +1,350 @@
 {% for index in indexes %}
-  /* Read by index {{ index.name }} - Auto-generated, do not modify */
-  METHOD PUBLIC LOGICAL Load({% for field in index.fields %}INPUT p{{ field.name }} AS {{ field.abl_type }}{% if not loop.last %}, {% endif %}{% endfor %}):
+  /* Find by index {{ index.name }} - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Find({% for field in index.fields %}INPUT p{{ field.name }} AS {{ field.abl_type }}{% if not loop.last %}, {% endif %}{% endfor %}):
     DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
-    LogAction('Loading record by index {{ index.name }}').
+    Logger:Info('Finding {{ table_name }} by index {{ index.name }}').
     FIND FIRST buf{{ table_name }} WHERE {% for field in index.fields %}buf{{ table_name }}.{{ field.name }} = p{{ field.name }}{% if not loop.last %} AND {% endif %}{% endfor %} NO-LOCK NO-ERROR.
     IF AVAILABLE buf{{ table_name }} THEN DO:
       LoadFields(BUFFER buf{{ table_name }}).
       THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
-      LoadRelatedRecords(BUFFER buf{{ table_name }}).
+      Logger:Info('Found {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
       RETURN TRUE.
     END.
+    Logger:Info('No {{ table_name }} record found for index {{ index.name }}').
     RETURN FALSE.
   END METHOD.
 
 {% endfor %}
-  /* Batch Load - Auto-generated, do not modify */
-  METHOD PUBLIC {{ namespace }}.{{ class_name }} EXTENT LoadBatch(INPUT pcWhere AS CHARACTER):
+  /* Find by INTEGER field - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL FindBy(INPUT pcFieldName AS CHARACTER, INPUT pValue AS INTEGER):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    Logger:Info('Finding {{ table_name }} by INTEGER field ' + pcFieldName + ' = ' + STRING(pValue)).
+    CASE pcFieldName:
+{% for field in fields %}
+{% if field.abl_type == "INTEGER" and field.extent == 0 %}
+      WHEN '{{ field.name }}' THEN
+        FIND FIRST buf{{ table_name }} WHERE buf{{ table_name }}.{{ field.name }} = pValue NO-LOCK NO-ERROR.
+{% endif %}
+{% endfor %}
+      OTHERWISE DO:
+        Logger:Error('Unknown INTEGER field name: ' + pcFieldName).
+        RETURN FALSE.
+      END.
+    END CASE.
+    
+    IF AVAILABLE buf{{ table_name }} THEN DO:
+      LoadFields(BUFFER buf{{ table_name }}).
+      THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+      Logger:Info('Found {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+      RETURN TRUE.
+    END.
+    Logger:Info('No {{ table_name }} record found for INTEGER field ' + pcFieldName).
+    RETURN FALSE.
+  END METHOD.
+
+  /* Find by CHARACTER field - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL FindBy(INPUT pcFieldName AS CHARACTER, INPUT pValue AS CHARACTER):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    Logger:Info('Finding {{ table_name }} by CHARACTER field ' + pcFieldName + ' = ' + pValue).
+    CASE pcFieldName:
+{% for field in fields %}
+{% if field.abl_type == "CHARACTER" and field.extent == 0 %}
+      WHEN '{{ field.name }}' THEN
+        FIND FIRST buf{{ table_name }} WHERE buf{{ table_name }}.{{ field.name }} = pValue NO-LOCK NO-ERROR.
+{% endif %}
+{% endfor %}
+      OTHERWISE DO:
+        Logger:Error('Unknown CHARACTER field name: ' + pcFieldName).
+        RETURN FALSE.
+      END.
+    END CASE.
+    
+    IF AVAILABLE buf{{ table_name }} THEN DO:
+      LoadFields(BUFFER buf{{ table_name }}).
+      THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+      Logger:Info('Found {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+      RETURN TRUE.
+    END.
+    Logger:Info('No {{ table_name }} record found for CHARACTER field ' + pcFieldName).
+    RETURN FALSE.
+  END METHOD.
+
+  /* Find by DECIMAL field - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL FindBy(INPUT pcFieldName AS CHARACTER, INPUT pValue AS DECIMAL):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    Logger:Info('Finding {{ table_name }} by DECIMAL field ' + pcFieldName + ' = ' + STRING(pValue)).
+    CASE pcFieldName:
+{% for field in fields %}
+{% if field.abl_type == "DECIMAL" and field.extent == 0 %}
+      WHEN '{{ field.name }}' THEN
+        FIND FIRST buf{{ table_name }} WHERE buf{{ table_name }}.{{ field.name }} = pValue NO-LOCK NO-ERROR.
+{% endif %}
+{% endfor %}
+      OTHERWISE DO:
+        Logger:Error('Unknown DECIMAL field name: ' + pcFieldName).
+        RETURN FALSE.
+      END.
+    END CASE.
+    
+    IF AVAILABLE buf{{ table_name }} THEN DO:
+      LoadFields(BUFFER buf{{ table_name }}).
+      THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+      Logger:Info('Found {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+      RETURN TRUE.
+    END.
+    Logger:Info('No {{ table_name }} record found for DECIMAL field ' + pcFieldName).
+    RETURN FALSE.
+  END METHOD.
+
+  /* Find by DATE field - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL FindBy(INPUT pcFieldName AS CHARACTER, INPUT pValue AS DATE):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    Logger:Info('Finding {{ table_name }} by DATE field ' + pcFieldName + ' = ' + STRING(pValue)).
+    CASE pcFieldName:
+{% for field in fields %}
+{% if field.abl_type == "DATE" and field.extent == 0 %}
+      WHEN '{{ field.name }}' THEN
+        FIND FIRST buf{{ table_name }} WHERE buf{{ table_name }}.{{ field.name }} = pValue NO-LOCK NO-ERROR.
+{% endif %}
+{% endfor %}
+      OTHERWISE DO:
+        Logger:Error('Unknown DATE field name: ' + pcFieldName).
+        RETURN FALSE.
+      END.
+    END CASE.
+    
+    IF AVAILABLE buf{{ table_name }} THEN DO:
+      LoadFields(BUFFER buf{{ table_name }}).
+      THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+      Logger:Info('Found {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+      RETURN TRUE.
+    END.
+    Logger:Info('No {{ table_name }} record found for DATE field ' + pcFieldName).
+    RETURN FALSE.
+  END METHOD.
+
+  /* Find by DATETIME field - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL FindBy(INPUT pcFieldName AS CHARACTER, INPUT pValue AS DATETIME):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    Logger:Info('Finding {{ table_name }} by DATETIME field ' + pcFieldName + ' = ' + STRING(pValue)).
+    CASE pcFieldName:
+{% for field in fields %}
+{% if field.abl_type == "DATETIME" and field.extent == 0 %}
+      WHEN '{{ field.name }}' THEN
+        FIND FIRST buf{{ table_name }} WHERE buf{{ table_name }}.{{ field.name }} = pValue NO-LOCK NO-ERROR.
+{% endif %}
+{% endfor %}
+      OTHERWISE DO:
+        Logger:Error('Unknown DATETIME field name: ' + pcFieldName).
+        RETURN FALSE.
+      END.
+    END CASE.
+    
+    IF AVAILABLE buf{{ table_name }} THEN DO:
+      LoadFields(BUFFER buf{{ table_name }}).
+      THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+      Logger:Info('Found {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+      RETURN TRUE.
+    END.
+    Logger:Info('No {{ table_name }} record found for DATETIME field ' + pcFieldName).
+    RETURN FALSE.
+  END METHOD.
+
+  /* Find by LOGICAL field - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL FindBy(INPUT pcFieldName AS CHARACTER, INPUT pValue AS LOGICAL):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    Logger:Info('Finding {{ table_name }} by LOGICAL field ' + pcFieldName + ' = ' + STRING(pValue)).
+    CASE pcFieldName:
+{% for field in fields %}
+{% if field.abl_type == "LOGICAL" and field.extent == 0 %}
+      WHEN '{{ field.name }}' THEN
+        FIND FIRST buf{{ table_name }} WHERE buf{{ table_name }}.{{ field.name }} = pValue NO-LOCK NO-ERROR.
+{% endif %}
+{% endfor %}
+      OTHERWISE DO:
+        Logger:Error('Unknown LOGICAL field name: ' + pcFieldName).
+        RETURN FALSE.
+      END.
+    END CASE.
+    
+    IF AVAILABLE buf{{ table_name }} THEN DO:
+      LoadFields(BUFFER buf{{ table_name }}).
+      THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+      Logger:Info('Found {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+      RETURN TRUE.
+    END.
+    Logger:Info('No {{ table_name }} record found for LOGICAL field ' + pcFieldName).
+    RETURN FALSE.
+  END METHOD.
+
+  /* Find by INTEGER extent field element - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL FindBy(INPUT pcFieldName AS CHARACTER, INPUT piElement AS INTEGER, INPUT pValue AS INTEGER):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    Logger:Info('Finding {{ table_name }} by INTEGER extent field ' + pcFieldName + ' element ' + STRING(piElement) + ' = ' + STRING(pValue)).
+    CASE pcFieldName:
+{% for field in fields %}
+{% if field.extent > 0 and field.abl_type == "INTEGER" %}
+      WHEN '{{ field.name }}' THEN DO:
+        IF piElement >= 1 AND piElement <= {{ field.extent }} THEN DO:
+          FIND FIRST buf{{ table_name }} WHERE buf{{ table_name }}.{{ field.name }}[piElement] = pValue NO-LOCK NO-ERROR.
+          IF AVAILABLE buf{{ table_name }} THEN DO:
+            LoadFields(BUFFER buf{{ table_name }}).
+            THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+            Logger:Info('Found {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+            RETURN TRUE.
+          END.
+          Logger:Info('No {{ table_name }} record found for {{ field.name }} element ' + STRING(piElement)).
+          RETURN FALSE.
+        END.
+        ELSE DO:
+          Logger:Error('Element index ' + STRING(piElement) + ' out of range for {{ field.name }} (1-{{ field.extent }})').
+          RETURN FALSE.
+        END.
+      END.
+{% endif %}
+{% endfor %}
+      OTHERWISE DO:
+        Logger:Error('Unknown INTEGER extent field name: ' + pcFieldName).
+        RETURN FALSE.
+      END.
+    END CASE.
+  END METHOD.
+
+  /* Find by CHARACTER extent field element - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL FindBy(INPUT pcFieldName AS CHARACTER, INPUT piElement AS INTEGER, INPUT pValue AS CHARACTER):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    Logger:Info('Finding {{ table_name }} by CHARACTER extent field ' + pcFieldName + ' element ' + STRING(piElement) + ' = ' + pValue).
+    CASE pcFieldName:
+{% for field in fields %}
+{% if field.extent > 0 and field.abl_type == "CHARACTER" %}
+      WHEN '{{ field.name }}' THEN DO:
+        IF piElement >= 1 AND piElement <= {{ field.extent }} THEN DO:
+          FIND FIRST buf{{ table_name }} WHERE buf{{ table_name }}.{{ field.name }}[piElement] = pValue NO-LOCK NO-ERROR.
+          IF AVAILABLE buf{{ table_name }} THEN DO:
+            LoadFields(BUFFER buf{{ table_name }}).
+            THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+            Logger:Info('Found {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+            RETURN TRUE.
+          END.
+          Logger:Info('No {{ table_name }} record found for {{ field.name }} element ' + STRING(piElement)).
+          RETURN FALSE.
+        END.
+        ELSE DO:
+          Logger:Error('Element index ' + STRING(piElement) + ' out of range for {{ field.name }} (1-{{ field.extent }})').
+          RETURN FALSE.
+        END.
+      END.
+{% endif %}
+{% endfor %}
+      OTHERWISE DO:
+        Logger:Error('Unknown CHARACTER extent field name: ' + pcFieldName).
+        RETURN FALSE.
+      END.
+    END CASE.
+  END METHOD.
+
+  /* Find by DECIMAL extent field element - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL FindBy(INPUT pcFieldName AS CHARACTER, INPUT piElement AS INTEGER, INPUT pValue AS DECIMAL):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    Logger:Info('Finding {{ table_name }} by DECIMAL extent field ' + pcFieldName + ' element ' + STRING(piElement) + ' = ' + STRING(pValue)).
+    CASE pcFieldName:
+{% for field in fields %}
+{% if field.extent > 0 and field.abl_type == "DECIMAL" %}
+      WHEN '{{ field.name }}' THEN DO:
+        IF piElement >= 1 AND piElement <= {{ field.extent }} THEN DO:
+          FIND FIRST buf{{ table_name }} WHERE buf{{ table_name }}.{{ field.name }}[piElement] = pValue NO-LOCK NO-ERROR.
+          IF AVAILABLE buf{{ table_name }} THEN DO:
+            LoadFields(BUFFER buf{{ table_name }}).
+            THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+            Logger:Info('Found {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+            RETURN TRUE.
+          END.
+          Logger:Info('No {{ table_name }} record found for {{ field.name }} element ' + STRING(piElement)).
+          RETURN FALSE.
+        END.
+        ELSE DO:
+          Logger:Error('Element index ' + STRING(piElement) + ' out of range for {{ field.name }} (1-{{ field.extent }})').
+          RETURN FALSE.
+        END.
+      END.
+{% endif %}
+{% endfor %}
+      OTHERWISE DO:
+        Logger:Error('Unknown DECIMAL extent field name: ' + pcFieldName).
+        RETURN FALSE.
+      END.
+    END CASE.
+  END METHOD.
+  /* Get first record from table - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL First():
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    Logger:Info('Getting first {{ table_name }} record').
+    FIND FIRST buf{{ table_name }} NO-LOCK NO-ERROR.
+    IF AVAILABLE buf{{ table_name }} THEN DO:
+      LoadFields(BUFFER buf{{ table_name }}).
+      THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+      Logger:Info('Found first {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+      RETURN TRUE.
+    END.
+    Logger:Info('No {{ table_name }} records found').
+    RETURN FALSE.
+  END METHOD.
+
+  /* Get last record from table - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Last():
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    Logger:Info('Getting last {{ table_name }} record').
+    FIND LAST buf{{ table_name }} NO-LOCK NO-ERROR.
+    IF AVAILABLE buf{{ table_name }} THEN DO:
+      LoadFields(BUFFER buf{{ table_name }}).
+      THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
+      Logger:Info('Found last {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+      RETURN TRUE.
+    END.
+    Logger:Info('No {{ table_name }} records found').
+    RETURN FALSE.
+  END METHOD.
+
+  /* Get all records as EXTENT - Auto-generated, do not modify */
+  {{!-- METHOD PUBLIC {{ namespace }}.{{ class_name }} EXTENT All():
     DEFINE VARIABLE oRecords AS {{ namespace }}.{{ class_name }} EXTENT NO-UNDO.
     DEFINE VARIABLE iCount AS INTEGER NO-UNDO INITIAL 0.
-    DEFINE VARIABLE queryString AS CHAR NO-UNDO.
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    
+    Logger:Info('Loading all {{ table_name }} records').
+    FOR EACH buf{{ table_name }} NO-LOCK:
+      iCount = iCount + 1.
+      EXTENT(oRecords) = iCount.
+      oRecords[iCount] = NEW {{ namespace }}.{{ class_name }}().
+      oRecords[iCount]:LoadFields(BUFFER buf{{ table_name }}).
+      oRecords[iCount]:ROWID_ = ROWID(buf{{ table_name }}).
+    END.
+    Logger:Info('Loaded ' + STRING(iCount) + ' {{ table_name }} records').
+    RETURN oRecords.
+  END METHOD. --}}
+
+  /* Get filtered records as EXTENT - Auto-generated, do not modify */
+  METHOD PUBLIC {{ namespace }}.{{ class_name }} EXTENT Where(INPUT pcCondition AS CHARACTER):
+    DEFINE VARIABLE oRecords AS {{ namespace }}.{{ class_name }} EXTENT NO-UNDO.
+    DEFINE VARIABLE iCount AS INTEGER NO-UNDO INITIAL 0.
+    DEFINE VARIABLE queryString AS CHARACTER NO-UNDO.
     DEFINE VARIABLE qh{{ table_name }} AS HANDLE NO-UNDO.
     DEFINE QUERY q{{ table_name }} FOR {{ table_name }}.
-    queryString = 'FOR EACH {{ table_name }} WHERE ' + pcWhere + ' NO-LOCK'.
+    
+    queryString = 'FOR EACH {{ table_name }} WHERE ' + pcCondition + ' NO-LOCK'.
     QUERY q{{ table_name }}:QUERY-PREPARE(queryString).
     QUERY q{{ table_name }}:QUERY-OPEN().
     qh{{ table_name }} = QUERY q{{ table_name }}:HANDLE.
-    LogAction('Loading batch with WHERE: ' + pcWhere).
+    
+    Logger:Info('Loading {{ table_name }} records with WHERE: ' + pcCondition).
     DO WHILE qh{{ table_name }}:GET-NEXT():
       iCount = iCount + 1.
       EXTENT(oRecords) = iCount.
       oRecords[iCount] = NEW {{ namespace }}.{{ class_name }}().
       oRecords[iCount]:LoadFields(BUFFER {{ table_name }}).
       oRecords[iCount]:ROWID_ = ROWID({{ table_name }}).
-      oRecords[iCount]:LoadRelatedRecords(BUFFER {{ table_name }}).
     END.
+    QUERY q{{ table_name }}:QUERY-CLOSE().
+    Logger:Info('Loaded ' + STRING(iCount) + ' {{ table_name }} records matching condition').
     RETURN oRecords.
   END METHOD.

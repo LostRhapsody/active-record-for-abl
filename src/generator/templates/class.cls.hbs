@@ -1,3 +1,4 @@
+USING OpenEdge.Logging.*.
 /* WARNING: This is an auto-generated file. Do NOT add custom logic here as it will be overwritten on schema update.
  * Extend this class in a separate file to add custom methods (e.g., for loading related records).
  * Generated on: {{ timestamp }} with ara-cli v1.0 */
@@ -9,8 +10,7 @@ CLASS {{ namespace }}.{{ class_name }}:
 
   DEFINE PUBLIC PROPERTY ROWID_ AS ROWID GET. SET.
   DEFINE PRIVATE TEMP-TABLE tt{{ table_name }} LIKE {{ table_name }}.
-  DEFINE PROTECTED PROPERTY DebugEnabled AS LOGICAL INITIAL FALSE GET. SET.
-  DEFINE PROTECTED PROPERTY LogFile AS CHARACTER INITIAL '' GET. SET.
+  DEFINE PRIVATE VARIABLE Logger AS ILogWriter NO-UNDO.
 
 {% include "methods.hbs" %}
 
@@ -21,6 +21,7 @@ CLASS {{ namespace }}.{{ class_name }}:
   /* Constructor - Auto-generated, do not modify */
   CONSTRUCTOR PUBLIC {{ class_name }}():
     THIS-OBJECT:ROWID_ = ?.
+    Logger = LoggerBuilder:GetLogger("{{ class_name }}").
   END CONSTRUCTOR.
   
   /* Destructor - Auto-generated, do not modify */

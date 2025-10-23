@@ -71,7 +71,15 @@ impl ClassGenerator {
 
         // Render the main class template
         let content = self.tera.render("class.cls.hbs", &context)?;
-        Ok(content)
+        
+        // Post-process: strip empty lines to make files more compact
+        let cleaned_content = content
+            .lines()
+            .filter(|line| !line.trim().is_empty())
+            .collect::<Vec<&str>>()
+            .join("\n");
+        
+        Ok(cleaned_content)
     }
 }
 

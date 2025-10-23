@@ -1,70 +1,433 @@
-  /* Log action for debugging or file logging */
-  METHOD PROTECTED VOID LogAction(INPUT pcAction AS CHARACTER):
-    IF THIS-OBJECT:DebugEnabled THEN
-      MESSAGE pcAction VIEW-AS ALERT-BOX.
-    IF THIS-OBJECT:LogFile <> '' THEN DO:
-      OUTPUT TO VALUE(THIS-OBJECT:LogFile) APPEND.
-      PUT UNFORMATTED pcAction SKIP(1).
-      OUTPUT CLOSE.
+  /* Create and save in one step - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Create({% for field in fields %}INPUT p{{ field.name }} AS {{ field.abl_type }}{% if not loop.last %}, {% endif %}{% endfor %}):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    DO TRANSACTION ON ERROR UNDO, THROW:
+      CREATE buf{{ table_name }}.
+      ASSIGN
+{% for field in fields %}
+        buf{{ table_name }}.{{ field.name }} = p{{ field.name }}
+{% endfor %}
+        THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }})
+      .
+      Logger:Info('Created new {{ table_name }} record with ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+      RETURN TRUE.
     END.
+    CATCH eError AS Progress.Lang.Error:
+      Logger:Error('Error in Create: ' + eError:GetMessage(1)).
+      UNDO, THROW eError.
+    END CATCH.
   END METHOD.
 
-  /* Create or Update - Auto-generated, do not modify */
-  METHOD PUBLIC VOID Save():
+  /* Save current instance (create if new, update if exists) - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Save():
     DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
     DO TRANSACTION ON ERROR UNDO, THROW:
       IF THIS-OBJECT:ROWID_ <> ? THEN DO:
-       FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
-        LogAction('Saving existing record ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+        FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
+        IF AVAILABLE buf{{ table_name }} THEN DO:
+          Logger:Info('Updating existing {{ table_name }} record ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+        END.
+        ELSE DO:
+          Logger:Error('Record not found for ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+          RETURN FALSE.
+        END.
       END.
-      IF NOT AVAILABLE buf{{ table_name }} THEN DO:
+      ELSE DO:
         CREATE buf{{ table_name }}.
-        LogAction('Creating new record').
+        Logger:Info('Creating new {{ table_name }} record').
       END.
+      
       ASSIGN
 {% for field in fields %}
         buf{{ table_name }}.{{ field.name }} = THIS-OBJECT:{{ field.name }}
 {% endfor %}
         THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }})
       .
+      RETURN TRUE.
     END.
     CATCH eError AS Progress.Lang.Error:
-      LogAction('Error in Save: ' + eError:GetMessage(1)).
-      MESSAGE 'Error in Save method for {{ table_name }}: ' + eError:GetMessage(1).
+      Logger:Error('Error in Save: ' + eError:GetMessage(1)).
       UNDO, THROW eError.
     END CATCH.
   END METHOD.
 
-  /* Read by ROWID - Auto-generated, do not modify */
-  METHOD PUBLIC LOGICAL Load(INPUT prRowId AS ROWID):
-    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
-    LogAction('Loading record by ROWID ' + STRING(prRowId)).
-    FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = prRowId NO-LOCK NO-ERROR.
-    IF AVAILABLE buf{{ table_name }} THEN DO:
-      LoadFields(BUFFER buf{{ table_name }}).
-      THIS-OBJECT:ROWID_ = ROWID(buf{{ table_name }}).
-      LoadRelatedRecords(BUFFER buf{{ table_name }}).
-      RETURN TRUE.
-    END.
-    RETURN FALSE.
-  END METHOD.
-
-  /* Delete - Auto-generated, do not modify */
-  METHOD PUBLIC VOID Delete():
+  /* Update INTEGER field and save - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Update(INPUT pcFieldName AS CHARACTER, INPUT pValue AS INTEGER):
     DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
     DO TRANSACTION ON ERROR UNDO, THROW:
       IF THIS-OBJECT:ROWID_ <> ? THEN DO:
         FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
-        LogAction('Deleting record ROWID ' + STRING(THIS-OBJECT:ROWID_)).
         IF AVAILABLE buf{{ table_name }} THEN DO:
-          DELETE buf{{ table_name }}.
-          THIS-OBJECT:ROWID_ = ?.
+          CASE pcFieldName:
+{% for field in fields %}
+{% if field.abl_type == "INTEGER" and field.extent == 0 %}
+            WHEN '{{ field.name }}' THEN
+              THIS-OBJECT:{{ field.name }} = pValue.
+{% endif %}
+{% endfor %}
+            OTHERWISE DO:
+              Logger:Error('Unknown INTEGER field name: ' + pcFieldName).
+              RETURN FALSE.
+            END.
+          END CASE.
+          RETURN THIS-OBJECT:Save().
         END.
+        ELSE DO:
+          Logger:Error('Record not found for ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+          RETURN FALSE.
+        END.
+      END.
+      ELSE DO:
+        Logger:Error('Cannot update - no record loaded').
+        RETURN FALSE.
       END.
     END.
     CATCH eError AS Progress.Lang.Error:
-      LogAction('Error in Delete: ' + eError:GetMessage(1)).
-      MESSAGE 'Error in Delete method for {{ table_name }}: ' + eError:GetMessage(1).
+      Logger:Error('Error in Update: ' + eError:GetMessage(1)).
+      UNDO, THROW eError.
+    END CATCH.
+  END METHOD.
+
+  /* Update CHARACTER field and save - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Update(INPUT pcFieldName AS CHARACTER, INPUT pValue AS CHARACTER):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    DO TRANSACTION ON ERROR UNDO, THROW:
+      IF THIS-OBJECT:ROWID_ <> ? THEN DO:
+        FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
+        IF AVAILABLE buf{{ table_name }} THEN DO:
+          CASE pcFieldName:
+{% for field in fields %}
+{% if field.abl_type == "CHARACTER" and field.extent == 0 %}
+            WHEN '{{ field.name }}' THEN
+              THIS-OBJECT:{{ field.name }} = pValue.
+{% endif %}
+{% endfor %}
+            OTHERWISE DO:
+              Logger:Error('Unknown CHARACTER field name: ' + pcFieldName).
+              RETURN FALSE.
+            END.
+          END CASE.
+          RETURN THIS-OBJECT:Save().
+        END.
+        ELSE DO:
+          Logger:Error('Record not found for ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+          RETURN FALSE.
+        END.
+      END.
+      ELSE DO:
+        Logger:Error('Cannot update - no record loaded').
+        RETURN FALSE.
+      END.
+    END.
+    CATCH eError AS Progress.Lang.Error:
+      Logger:Error('Error in Update: ' + eError:GetMessage(1)).
+      UNDO, THROW eError.
+    END CATCH.
+  END METHOD.
+
+  /* Update DECIMAL field and save - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Update(INPUT pcFieldName AS CHARACTER, INPUT pValue AS DECIMAL):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    DO TRANSACTION ON ERROR UNDO, THROW:
+      IF THIS-OBJECT:ROWID_ <> ? THEN DO:
+        FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
+        IF AVAILABLE buf{{ table_name }} THEN DO:
+          CASE pcFieldName:
+{% for field in fields %}
+{% if field.abl_type == "DECIMAL" and field.extent == 0 %}
+            WHEN '{{ field.name }}' THEN
+              THIS-OBJECT:{{ field.name }} = pValue.
+{% endif %}
+{% endfor %}
+            OTHERWISE DO:
+              Logger:Error('Unknown DECIMAL field name: ' + pcFieldName).
+              RETURN FALSE.
+            END.
+          END CASE.
+          RETURN THIS-OBJECT:Save().
+        END.
+        ELSE DO:
+          Logger:Error('Record not found for ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+          RETURN FALSE.
+        END.
+      END.
+      ELSE DO:
+        Logger:Error('Cannot update - no record loaded').
+        RETURN FALSE.
+      END.
+    END.
+    CATCH eError AS Progress.Lang.Error:
+      Logger:Error('Error in Update: ' + eError:GetMessage(1)).
+      UNDO, THROW eError.
+    END CATCH.
+  END METHOD.
+
+  /* Update DATE field and save - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Update(INPUT pcFieldName AS CHARACTER, INPUT pValue AS DATE):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    DO TRANSACTION ON ERROR UNDO, THROW:
+      IF THIS-OBJECT:ROWID_ <> ? THEN DO:
+        FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
+        IF AVAILABLE buf{{ table_name }} THEN DO:
+          CASE pcFieldName:
+{% for field in fields %}
+{% if field.abl_type == "DATE" and field.extent == 0 %}
+            WHEN '{{ field.name }}' THEN
+              THIS-OBJECT:{{ field.name }} = pValue.
+{% endif %}
+{% endfor %}
+            OTHERWISE DO:
+              Logger:Error('Unknown DATE field name: ' + pcFieldName).
+              RETURN FALSE.
+            END.
+          END CASE.
+          RETURN THIS-OBJECT:Save().
+        END.
+        ELSE DO:
+          Logger:Error('Record not found for ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+          RETURN FALSE.
+        END.
+      END.
+      ELSE DO:
+        Logger:Error('Cannot update - no record loaded').
+        RETURN FALSE.
+      END.
+    END.
+    CATCH eError AS Progress.Lang.Error:
+      Logger:Error('Error in Update: ' + eError:GetMessage(1)).
+      UNDO, THROW eError.
+    END CATCH.
+  END METHOD.
+
+  /* Update DATETIME field and save - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Update(INPUT pcFieldName AS CHARACTER, INPUT pValue AS DATETIME):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    DO TRANSACTION ON ERROR UNDO, THROW:
+      IF THIS-OBJECT:ROWID_ <> ? THEN DO:
+        FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
+        IF AVAILABLE buf{{ table_name }} THEN DO:
+          CASE pcFieldName:
+{% for field in fields %}
+{% if field.abl_type == "DATETIME" and field.extent == 0 %}
+            WHEN '{{ field.name }}' THEN
+              THIS-OBJECT:{{ field.name }} = pValue.
+{% endif %}
+{% endfor %}
+            OTHERWISE DO:
+              Logger:Error('Unknown DATETIME field name: ' + pcFieldName).
+              RETURN FALSE.
+            END.
+          END CASE.
+          RETURN THIS-OBJECT:Save().
+        END.
+        ELSE DO:
+          Logger:Error('Record not found for ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+          RETURN FALSE.
+        END.
+      END.
+      ELSE DO:
+        Logger:Error('Cannot update - no record loaded').
+        RETURN FALSE.
+      END.
+    END.
+    CATCH eError AS Progress.Lang.Error:
+      Logger:Error('Error in Update: ' + eError:GetMessage(1)).
+      UNDO, THROW eError.
+    END CATCH.
+  END METHOD.
+
+  /* Update LOGICAL field and save - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Update(INPUT pcFieldName AS CHARACTER, INPUT pValue AS LOGICAL):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    DO TRANSACTION ON ERROR UNDO, THROW:
+      IF THIS-OBJECT:ROWID_ <> ? THEN DO:
+        FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
+        IF AVAILABLE buf{{ table_name }} THEN DO:
+          CASE pcFieldName:
+{% for field in fields %}
+{% if field.abl_type == "LOGICAL" and field.extent == 0 %}
+            WHEN '{{ field.name }}' THEN
+              THIS-OBJECT:{{ field.name }} = pValue.
+{% endif %}
+{% endfor %}
+            OTHERWISE DO:
+              Logger:Error('Unknown LOGICAL field name: ' + pcFieldName).
+              RETURN FALSE.
+            END.
+          END CASE.
+          RETURN THIS-OBJECT:Save().
+        END.
+        ELSE DO:
+          Logger:Error('Record not found for ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+          RETURN FALSE.
+        END.
+      END.
+      ELSE DO:
+        Logger:Error('Cannot update - no record loaded').
+        RETURN FALSE.
+      END.
+    END.
+    CATCH eError AS Progress.Lang.Error:
+      Logger:Error('Error in Update: ' + eError:GetMessage(1)).
+      UNDO, THROW eError.
+    END CATCH.
+  END METHOD.
+
+  /* Update INTEGER extent field element and save - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Update(INPUT pcFieldName AS CHARACTER, INPUT piElement AS INTEGER, INPUT pValue AS INTEGER):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    DO TRANSACTION ON ERROR UNDO, THROW:
+      IF THIS-OBJECT:ROWID_ <> ? THEN DO:
+        FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
+        IF AVAILABLE buf{{ table_name }} THEN DO:
+          CASE pcFieldName:
+{% for field in fields %}
+{% if field.extent > 0 and field.abl_type == "INTEGER" %}
+            WHEN '{{ field.name }}' THEN DO:
+              IF piElement >= 1 AND piElement <= {{ field.extent }} THEN DO:
+                THIS-OBJECT:{{ field.name }}[piElement] = pValue.
+                RETURN THIS-OBJECT:Save().
+              END.
+              ELSE DO:
+                Logger:Error('Element index ' + STRING(piElement) + ' out of range for {{ field.name }} (1-{{ field.extent }})').
+                RETURN FALSE.
+              END.
+            END.
+{% endif %}
+{% endfor %}
+            OTHERWISE DO:
+              Logger:Error('Unknown INTEGER extent field name: ' + pcFieldName).
+              RETURN FALSE.
+            END.
+          END CASE.
+        END.
+        ELSE DO:
+          Logger:Error('Record not found for ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+          RETURN FALSE.
+        END.
+      END.
+      ELSE DO:
+        Logger:Error('Cannot update - no record loaded').
+        RETURN FALSE.
+      END.
+    END.
+    CATCH eError AS Progress.Lang.Error:
+      Logger:Error('Error in Update: ' + eError:GetMessage(1)).
+      UNDO, THROW eError.
+    END CATCH.
+  END METHOD.
+
+  /* Update CHARACTER extent field element and save - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Update(INPUT pcFieldName AS CHARACTER, INPUT piElement AS INTEGER, INPUT pValue AS CHARACTER):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    DO TRANSACTION ON ERROR UNDO, THROW:
+      IF THIS-OBJECT:ROWID_ <> ? THEN DO:
+        FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
+        IF AVAILABLE buf{{ table_name }} THEN DO:
+          CASE pcFieldName:
+{% for field in fields %}
+{% if field.extent > 0 and field.abl_type == "CHARACTER" %}
+            WHEN '{{ field.name }}' THEN DO:
+              IF piElement >= 1 AND piElement <= {{ field.extent }} THEN DO:
+                THIS-OBJECT:{{ field.name }}[piElement] = pValue.
+                RETURN THIS-OBJECT:Save().
+              END.
+              ELSE DO:
+                Logger:Error('Element index ' + STRING(piElement) + ' out of range for {{ field.name }} (1-{{ field.extent }})').
+                RETURN FALSE.
+              END.
+            END.
+{% endif %}
+{% endfor %}
+            OTHERWISE DO:
+              Logger:Error('Unknown CHARACTER extent field name: ' + pcFieldName).
+              RETURN FALSE.
+            END.
+          END CASE.
+        END.
+        ELSE DO:
+          Logger:Error('Record not found for ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+          RETURN FALSE.
+        END.
+      END.
+      ELSE DO:
+        Logger:Error('Cannot update - no record loaded').
+        RETURN FALSE.
+      END.
+    END.
+    CATCH eError AS Progress.Lang.Error:
+      Logger:Error('Error in Update: ' + eError:GetMessage(1)).
+      UNDO, THROW eError.
+    END CATCH.
+  END METHOD.
+
+  /* Update DECIMAL extent field element and save - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Update(INPUT pcFieldName AS CHARACTER, INPUT piElement AS INTEGER, INPUT pValue AS DECIMAL):
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    DO TRANSACTION ON ERROR UNDO, THROW:
+      IF THIS-OBJECT:ROWID_ <> ? THEN DO:
+        FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
+        IF AVAILABLE buf{{ table_name }} THEN DO:
+          CASE pcFieldName:
+{% for field in fields %}
+{% if field.extent > 0 and field.abl_type == "DECIMAL" %}
+            WHEN '{{ field.name }}' THEN DO:
+              IF piElement >= 1 AND piElement <= {{ field.extent }} THEN DO:
+                THIS-OBJECT:{{ field.name }}[piElement] = pValue.
+                RETURN THIS-OBJECT:Save().
+              END.
+              ELSE DO:
+                Logger:Error('Element index ' + STRING(piElement) + ' out of range for {{ field.name }} (1-{{ field.extent }})').
+                RETURN FALSE.
+              END.
+            END.
+{% endif %}
+{% endfor %}
+            OTHERWISE DO:
+              Logger:Error('Unknown DECIMAL extent field name: ' + pcFieldName).
+              RETURN FALSE.
+            END.
+          END CASE.
+        END.
+        ELSE DO:
+          Logger:Error('Record not found for ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+          RETURN FALSE.
+        END.
+      END.
+      ELSE DO:
+        Logger:Error('Cannot update - no record loaded').
+        RETURN FALSE.
+      END.
+    END.
+    CATCH eError AS Progress.Lang.Error:
+      Logger:Error('Error in Update: ' + eError:GetMessage(1)).
+      UNDO, THROW eError.
+    END CATCH.
+  END METHOD.
+  /* Delete current record - Auto-generated, do not modify */
+  METHOD PUBLIC LOGICAL Destroy():
+    DEFINE BUFFER buf{{ table_name }} FOR {{ table_name }}.
+    DO TRANSACTION ON ERROR UNDO, THROW:
+      IF THIS-OBJECT:ROWID_ <> ? THEN DO:
+        FIND FIRST buf{{ table_name }} WHERE ROWID(buf{{ table_name }}) = THIS-OBJECT:ROWID_ EXCLUSIVE-LOCK NO-ERROR.
+        IF AVAILABLE buf{{ table_name }} THEN DO:
+          Logger:Info('Destroying {{ table_name }} record ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+          DELETE buf{{ table_name }}.
+          THIS-OBJECT:ROWID_ = ?.
+          RETURN TRUE.
+        END.
+        ELSE DO:
+          Logger:Error('Record not found for ROWID ' + STRING(THIS-OBJECT:ROWID_)).
+          RETURN FALSE.
+        END.
+      END.
+      ELSE DO:
+        Logger:Error('Cannot destroy - no record loaded').
+        RETURN FALSE.
+      END.
+    END.
+    CATCH eError AS Progress.Lang.Error:
+      Logger:Error('Error in Destroy: ' + eError:GetMessage(1)).
       UNDO, THROW eError.
     END CATCH.
   END METHOD.
@@ -76,11 +439,4 @@
       THIS-OBJECT:{{ field.name }} = buf{{ table_name }}.{{ field.name }}
 {% endfor %}
     .
-  END METHOD.
-
-  /* Hook for loading related records - Override in child class */
-  METHOD PROTECTED VOID LoadRelatedRecords(BUFFER buf{{ table_name }} FOR {{ table_name }}):
-    /* Override this method in a child class to load related records.
-     * Example: For an Order, load OrderLines into an array or implement an iterator like GetNextOrderLine().
-     * Use buf{{ table_name }} to access the current record's fields (e.g., OrderNum). */
   END METHOD.

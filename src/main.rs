@@ -1,3 +1,6 @@
+// TODO: Implement dirty tracking to only update changed fields instead of all fields
+// This would improve performance by only sending modified field values to the database
+
 use clap::Parser;
 use anyhow::Result;
 
